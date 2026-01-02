@@ -442,7 +442,7 @@ toggleBtn.addEventListener('click', () => {
 
     traceImage.style.opacity = inputs.opacity.value;
 
-    toggleBtn.innerHTML = `< i data - lucide="${iconName}" ></i > `;
+    toggleBtn.innerHTML = `<i data-lucide="${iconName}"></i>`;
     lucide.createIcons();
 });
 
@@ -450,7 +450,7 @@ inputs.opacity.addEventListener('input', () => {
     if (!imgVisible) {
         imgVisible = true;
         toggleBtn.classList.remove('btn-toggled-off');
-        toggleBtn.innerHTML = `< i data - lucide="eye" ></i > `;
+        toggleBtn.innerHTML = `<i data-lucide="eye"></i>`;
         lucide.createIcons();
     }
     traceImage.style.opacity = inputs.opacity.value;
