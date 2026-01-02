@@ -67,7 +67,7 @@
         </div>
 
         <div class="control-group">
-            <label>Pattern Fill</label>
+            <label>Pattern fill</label>
             <div class="row">
                 <input type="text" id="input-pattern" placeholder="e.g. -#" style="flex:2;">
                 <button id="btn-fill" class="btn" style="flex:1;">Fill</button>
@@ -89,11 +89,13 @@
         <div class="control-group">
             <label>Character set</label>
             <select id="char-preset">
-                <option value="standard_short">Standard (Short)</option>
-                <option value="standard_long">Standard (Long)</option>
+                <option value="standard">Standard</option>
+                <option value="standard_extended">Standard (extended)</option>
+                <option value="super_extended">Super extended</option>
                 <option value="blocks">Blocks</option>
+                <option value="threshold">Threshold (2 chars)</option>
                 <option value="binary">Binary</option>
-                <option value="custom">Custom...</option>
+                <option value="custom">Custom…</option>
             </select>
         </div>
         <div class="control-group" id="custom-char-group" style="display:none;">
@@ -131,6 +133,7 @@
                 <img id="trace-image" src="" alt="">
                 <textarea id="ascii-layer" spellcheck="false"></textarea>
             </div>
+            <div id="char-counter">0 chars</div>
         </div>
     </div>
 

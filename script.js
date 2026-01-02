@@ -6,7 +6,14 @@ const traceImage = document.getElementById('trace-image');
 const asciiLayer = document.getElementById('ascii-layer');
 const container = document.getElementById('canvas-container');
 const scrollShim = document.getElementById('scroll-shim');
+
 const placeholder = document.getElementById('placeholder');
+const charCounter = document.getElementById('char-counter');
+
+function updateCharCount() {
+    const count = asciiLayer.value.length;
+    charCounter.textContent = `${count} chars`;
+}
 
 // Contexts
 const analysisCanvas = document.getElementById('analysis-canvas');
@@ -16,9 +23,11 @@ const rctx = renderCanvas.getContext('2d', { willReadFrequently: true });
 
 // Presets
 const presets = {
-    standard_short: "@%#*+=-:. ",
-    standard_long: "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
+    standard: "@%#*+=-:. ",
+    standard_extended: "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ",
+    super_extended: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 `¬!\"£$%^&*()_+-=[];'#:@~,./<>?\\|¯…†‡‰™¥©§¦®°±µ¶»¼½¿¡─━│┃┄┅┆┇┈┉┊┋┌┍┎┏┐┑┒┓└┕┖┗┘┙┚┛├┝┞┟┠┡┢┣┤┥┦┧┨┩┪┫┬┭┮┯┰┱┲┳┴┵┶┷┸┹┺┻┼┽┾┿╀╁╂╃╄╅╆╇╈╉╊╋╌╍╎╏═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬╭╮╯╰╱╲╳▀ ▂▃▄▅▆▇█▉▊▋▌▍▎▏▖▗▘▙▚▛▜▝▞▟░▒▓",
     blocks: "█▓▒░ ",
+    threshold: "█ ",
     binary: "01 "
 };
 
@@ -74,7 +83,7 @@ function updateZoomDimensions() {
     const naturalH = traceImage.naturalHeight;
 
     scrollShim.style.width = (naturalW * zoom) + 'px';
-    scrollShim.style.height = (naturalH * zoom) + 'px';
+    scrollShim.style.height = (naturalH * zoom + 30) + 'px';
 
     container.style.width = naturalW + 'px';
     container.style.height = naturalH + 'px';
@@ -95,6 +104,7 @@ imgUpload.addEventListener('change', (e) => {
             placeholder.style.display = 'none';
             container.style.display = 'block';
             asciiLayer.style.display = 'block';
+            charCounter.style.display = 'block';
 
             updateZoomDimensions();
         }
@@ -106,13 +116,39 @@ imgUpload.addEventListener('change', (e) => {
 inputs.font.addEventListener('input', (e) => {
     const family = e.target.value ? `"${e.target.value}", monospace` : 'monospace';
     root.style.setProperty('--font-family', family);
-    inputPattern.style.fontFamily = family; // Sync pattern input font
+    inputPattern.style.fontFamily = family;
 });
 inputs.color.addEventListener('input', (e) => root.style.setProperty('--text-color', e.target.value));
 inputs.bg.addEventListener('input', (e) => root.style.setProperty('--bg-color', e.target.value));
 
 inputs.preset.addEventListener('change', (e) => {
     document.getElementById('custom-char-group').style.display = e.target.value === 'custom' ? 'block' : 'none';
+});
+
+inputs.customChars.addEventListener('input', (e) => {
+    const val = e.target.value;
+    const selectionStart = e.target.selectionStart;
+
+    // Deduplicate while preserving order
+    const unique = [...new Set(val)].join('');
+
+    if (unique !== val) {
+        e.target.value = unique;
+
+        // Adjust cursor position: if we removed characters before the cursor, it should move back
+        // But since we only ever remove duplicates, if the character just typed was a duplicate, 
+        // it disappears, and the cursor should stay where it was relative to the existing text.
+        // A simple way is to find how many characters were removed BEFORE the selectionStart.
+        let newPos = 0;
+        const seen = new Set();
+        for (let i = 0; i < selectionStart; i++) {
+            if (!seen.has(val[i])) {
+                seen.add(val[i]);
+                newPos++;
+            }
+        }
+        e.target.setSelectionRange(newPos, newPos);
+    }
 });
 
 // --- 4. Character Analysis ---
@@ -232,6 +268,7 @@ function generateAscii() {
         result += "\n";
     }
     asciiLayer.value = result;
+    updateCharCount();
 }
 
 const modalOverlay = document.getElementById('modal-overlay');
@@ -243,15 +280,14 @@ btnModalCancel.addEventListener('click', () => {
 });
 const btnFill = document.getElementById('btn-fill');
 const inputPattern = document.getElementById('input-pattern');
-let pendingAction = null; // 'generate' or 'fill'
+let pendingAction = null;
 
 function fillPattern() {
     const pattern = inputPattern.value || "-#";
-    const width = traceImage.naturalWidth || 800; // Fallback if no image
+    const width = traceImage.naturalWidth || 800;
     const height = traceImage.naturalHeight || 600;
 
-    // Set canvas dimensions
-    renderCanvas.width = width; // Not strictly needed for text but good for consistency
+    renderCanvas.width = width;
     renderCanvas.height = height;
 
     const style = window.getComputedStyle(asciiLayer);
@@ -269,25 +305,24 @@ function fillPattern() {
 
     while (true) {
         const char = pattern[pIdx % pattern.length];
-        const charW = actx.measureText(char).width; // Measure single char
+        const charW = actx.measureText(char).width;
 
-        // Check if adding this char exceeds width
         if (currentX + charW > width) {
             break;
         }
 
         lineStr += char;
-        currentX += charW; // Approximate, but reasonably close for monospace/proportional
+        currentX += charW;
         pIdx++;
     }
 
-    // Repeat this line for the height
     for (let y = 0; y < height; y += lineHeight) {
         if (y + lineHeight > height) break;
         result += lineStr + "\n";
     }
 
     asciiLayer.value = result;
+    updateCharCount();
 }
 
 document.getElementById('btn-magic').addEventListener('click', () => {
@@ -339,7 +374,12 @@ document.getElementById('btn-download').addEventListener('click', () => {
     a.download = "ascii_art.txt";
     a.click();
 });
-document.getElementById('btn-clear').addEventListener('click', () => asciiLayer.value = "");
+document.getElementById('btn-clear').addEventListener('click', () => {
+    asciiLayer.value = "";
+    updateCharCount();
+});
+
+asciiLayer.addEventListener('input', updateCharCount);
 
 // --- Insert key support ---
 let isOverwriteMode = false;
