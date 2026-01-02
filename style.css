@@ -179,6 +179,13 @@ input[type="color"] {
     background: #005f9e;
 }
 
+.btn-success {
+    background-color: #2e7d32 !important;
+    border-color: #1b5e20 !important;
+    color: #fff !important;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
 .row {
     display: flex;
     gap: 8px;

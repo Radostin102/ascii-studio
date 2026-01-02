@@ -363,8 +363,26 @@ btnModalConfirm.addEventListener('click', () => {
 
 // --- Utils ---
 document.getElementById('btn-copy').addEventListener('click', () => {
+    const text = asciiLayer.value;
+    if (!text || text.trim().length === 0) return;
+
     asciiLayer.select();
-    navigator.clipboard.writeText(asciiLayer.value);
+    navigator.clipboard.writeText(text);
+
+    // Visual feedback
+    const btn = document.getElementById('btn-copy');
+    const originalHtml = btn.innerHTML;
+
+    btn.classList.add('btn-success');
+    // Change icon to check
+    btn.innerHTML = `<i data-lucide="check" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;"></i> Copied`;
+    lucide.createIcons();
+
+    setTimeout(() => {
+        btn.classList.remove('btn-success');
+        btn.innerHTML = originalHtml;
+        lucide.createIcons();
+    }, 1000);
 });
 document.getElementById('btn-download').addEventListener('click', () => {
     const blob = new Blob([asciiLayer.value], { type: "text/plain" });
@@ -424,7 +442,7 @@ toggleBtn.addEventListener('click', () => {
 
     traceImage.style.opacity = inputs.opacity.value;
 
-    toggleBtn.innerHTML = `<i data-lucide="${iconName}"></i>`;
+    toggleBtn.innerHTML = `< i data - lucide="${iconName}" ></i > `;
     lucide.createIcons();
 });
 
@@ -432,7 +450,7 @@ inputs.opacity.addEventListener('input', () => {
     if (!imgVisible) {
         imgVisible = true;
         toggleBtn.classList.remove('btn-toggled-off');
-        toggleBtn.innerHTML = `<i data-lucide="eye"></i>`;
+        toggleBtn.innerHTML = `< i data - lucide="eye" ></i > `;
         lucide.createIcons();
     }
     traceImage.style.opacity = inputs.opacity.value;
