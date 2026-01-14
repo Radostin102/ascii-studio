@@ -136,7 +136,7 @@ inputs.customChars.addEventListener('input', (e) => {
         e.target.value = unique;
 
         // Adjust cursor position: if we removed characters before the cursor, it should move back
-        // But since we only ever remove duplicates, if the character just typed was a duplicate, 
+        // But since we only ever remove duplicates, if the character just typed was a duplicate,
         // it disappears, and the cursor should stay where it was relative to the existing text.
         // A simple way is to find how many characters were removed BEFORE the selectionStart.
         let newPos = 0;
